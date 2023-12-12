@@ -5,3 +5,9 @@ data/*.sql
 # ignore the file where i kept my db credentials
 
 env_vars.txt
+
+### Python template
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
