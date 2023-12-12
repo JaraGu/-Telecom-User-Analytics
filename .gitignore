@@ -1,2 +1,7 @@
 # ignore the data files which are in .sql
+
 data/*.sql
+
+# ignore the file where i kept my db credentials
+
+env_vars.txt
