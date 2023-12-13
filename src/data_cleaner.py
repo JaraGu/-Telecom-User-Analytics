@@ -76,3 +76,31 @@ def fix_outliers(df, columns, percentile=95):
             df.loc[df[col] > threshold, col] = df[col].mean()
 
     return df
+
+def aggregate_user_data(df, app_columns):
+    # If the columns have spaces, replace them with underscores for easier access
+    df.columns = df.columns.str.replace(' ', '_')
+
+    # Filter columns that exist in the DataFrame
+    existing_columns = [col for col in app_columns if col in df.columns]
+
+    # Group by 'MSISDN/Number' and aggregate the required information
+    user_aggregation = df.groupby('MSISDN/Number').agg(
+        Num_of_xDR_sessions=('Bearer_Id', 'count'),  # Number of xDR sessions
+        Session_duration=('Dur._(ms).1', 'sum'),  # Session duration
+        Total_DL=('Total_DL_(Bytes)', 'sum'),  # Total download data
+        Total_UL=('Total_UL_(Bytes)', 'sum'),  # Total upload data
+        **{f'{col}_DL': (col.replace(' ', '_'), 'sum') for col in existing_columns},  # DL data for each application
+        **{f'{col}_UL': (col.replace(' ', '_'), 'sum') for col in existing_columns}  # UL data for each application
+    ).reset_index()
+
+    # Add a column for the total data volume (DL + UL) for each application
+    user_aggregation['Total_Data_Volume'] = user_aggregation[
+        [f'{col}_DL' for col in existing_columns] + [f'{col}_UL' for col in existing_columns]
+    ].sum(axis=1)
+
+    # Merge the aggregated data back to the original DataFrame
+    df = pd.merge(df, user_aggregation, on='MSISDN/Number', how='left')
+
+    return df
+
