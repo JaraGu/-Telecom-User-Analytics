@@ -54,3 +54,25 @@ def missing_values_table(df):
     # Return the dataframe with missing information
     return mis_val_table_ren_columns
 
+
+def get_numeric_columns(df):
+    # Identify numeric columns
+    numeric_cols = df.select_dtypes(include=['float64']).columns
+    return list(numeric_cols)
+
+
+def fix_outliers(df, columns, percentile=95):
+    # Create a copy to avoid the "A value is trying to be set on a copy" warning
+    df = df.copy()
+
+    # Iterate over specified columns and fix outliers
+    for col in columns:
+        # Check if the column needs outlier fixing
+        if col not in ["Bearer Id", "IMSI", "MSISDN/Number", "IMEI", "Start ms", "End ms", "Dur. (ms)", "Dur. (s)"]:
+            # Calculate the threshold for outliers
+            threshold = df[col].quantile(percentile / 100)
+
+            # Replace outliers with the mean
+            df.loc[df[col] > threshold, col] = df[col].mean()
+
+    return df
