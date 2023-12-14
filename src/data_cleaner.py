@@ -76,36 +76,3 @@ def fix_outliers(df, columns, percentile=95):
             df.loc[df[col] > threshold, col] = df[col].mean()
 
     return df
-
-def univariate_analysis(df, numeric_columns, excluded_columns=None):
-    """
-    Conducts Non-Graphical Univariate Analysis by computing dispersion parameters for each quantitative variable.
-
-    Args:
-    df (pd.DataFrame): The DataFrame to analyze.
-    numeric_columns (list): List of numeric columns to analyze.
-    excluded_columns (list, optional): List of columns to exclude from analysis. Default is None.
-
-    Returns:
-    pd.DataFrame: A DataFrame containing dispersion measures for each numeric column.
-    """
-    if excluded_columns is None:
-        excluded_columns = []
-
-    results = []
-
-    for col in numeric_columns:
-        # Skip columns in the exclusion list
-        if col not in excluded_columns:
-            range_value = df[col].max() - df[col].min()
-            variance_value = df[col].var()
-            std_dev_value = df[col].std()
-
-            results.append({
-                'Column': col,
-                'Range': range_value,
-                'Variance': variance_value,
-                'Standard_Deviation': std_dev_value
-            })
-
-    return pd.DataFrame(results)
