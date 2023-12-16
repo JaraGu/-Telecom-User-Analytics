@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 # how many missing values exist or better still what is the % of missing values in the dataset?
 
@@ -136,21 +137,32 @@ def get_numeric_columns(df):
     return list(numeric_cols)
 
 
-def fix_outliers(df, columns, percentile=95):
+def fix_multi_outliers(df, columns, lower_percentile=0.5, upper_percentile=95):
     # Create a copy to avoid the "A value is trying to be set on a copy" warning
     df = df.copy()
 
     # Iterate over specified columns and fix outliers
     for col in columns:
         # Check if the column needs outlier fixing
-        if col not in ["Bearer Id", "IMSI", "MSISDN/Number", "IMEI", "Start ms", "End ms", "Dur. (ms)", "Dur. (s)"]:
-            # Calculate the threshold for outliers
-            threshold = df[col].quantile(percentile / 100)
+        if col not in ["Bearer Id", "IMSI", "MSISDN/Number", "IMEI"]:
+            # Calculate the threshold for lower and upper percentiles
+            lower_threshold = df[col].quantile(lower_percentile / 100)
+            upper_threshold = df[col].quantile(upper_percentile / 100)
 
-            # Replace outliers with the mean
-            df.loc[df[col] > threshold, col] = df[col].mean()
+            # Replace values below the lower threshold with the median
+            df.loc[df[col] < lower_threshold, col] = df[col].median()
+
+            # Replace values above the upper threshold with the median
+            df.loc[df[col] > upper_threshold, col] = df[col].median()
 
     return df
+
+
+def fix_outliers(df, columns):
+    for column in columns:
+        df[column] = np.where(df[column] > df[column].quantile(
+            0.95), df[column].median(), df[column])
+    return df[columns]
 
 
 def convert_bytes_to_megabytes(df, *bytes_columns):
@@ -274,3 +286,27 @@ def convert_column_names_kbps_to_mbps(df, *kbps_columns):
         df_copy.rename(columns={kbps_column: new_column_name}, inplace=True)
 
     return df_copy
+
+
+def normalizer(df, columns_to_exclude=[]):
+    # Create a copy of the original DataFrame to avoid modifying it directly
+    normalized_df = df.copy()
+
+    # Exclude specified columns from normalization
+    columns_to_normalize = [
+        col for col in df.columns if col not in columns_to_exclude]
+
+    # Check if there are columns to normalize
+    if columns_to_normalize:
+        minmax_scaler = MinMaxScaler()
+        normalized_values = minmax_scaler.fit_transform(
+            df[columns_to_normalize])
+
+        # Replace values in the original DataFrame only for the specified columns
+        normalized_df[columns_to_normalize] = normalized_values
+
+        # Print min and max values after normalization
+        print("Min Value: ", normalized_values.min())
+        print("Max value: ", normalized_values.max())
+
+    return normalized_df
