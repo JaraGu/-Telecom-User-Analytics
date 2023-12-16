@@ -249,45 +249,6 @@ def convert_kbps_to_mbps(df, *kbps_columns):
     return df_result
 
 
-def convert_column_names_kbps_to_mbps(df, *kbps_columns):
-    """
-    Convert column names from Kbps to Mbps in a DataFrame.
-
-    Parameters:
-    - df: DataFrame
-        The input DataFrame.
-    - *kbps_columns: str
-        Variable-length list of column names with "Kbps" in their name.
-
-    Returns:
-    - DataFrame
-        A new DataFrame with updated column names.
-    """
-    # Create a copy of the DataFrame to avoid modifying the original
-    df_copy = df.copy()
-
-    # Conversion factor from Kbps to Mbps
-    conversion_factor = 1e-3
-
-    # Iterate through each specified column
-    for kbps_column in kbps_columns:
-        # Extract numeric part and convert to Mbps
-        numeric_part = "".join(filter(str.isdigit, kbps_column))
-        numeric_value = int(numeric_part) * conversion_factor
-
-        # Replace "Kbps" with "Mbps" in the column name
-        new_column_name = kbps_column.replace('Kbps', 'Mbps')
-
-        # Update the numeric value in the column name
-        new_column_name = new_column_name.replace(
-            str(int(numeric_part)), str(numeric_value))
-
-        # Rename the column in the copy of the DataFrame
-        df_copy.rename(columns={kbps_column: new_column_name}, inplace=True)
-
-    return df_copy
-
-
 def normalizer(df, columns_to_exclude=[]):
     # Create a copy of the original DataFrame to avoid modifying it directly
     normalized_df = df.copy()
